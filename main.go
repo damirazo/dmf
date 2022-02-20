@@ -13,8 +13,11 @@ var routes = []dmf.Route{
 	{Pattern: "/", Handler: func(core *dmf.Core) *dmf.Response {
 		return core.String("hello world")
 	}},
-	{Pattern: "/ping", Handler: func(core *dmf.Core) *dmf.Response {
+	{Pattern: "/ping/", Handler: func(core *dmf.Core) *dmf.Response {
 		return core.String("pong")
+	}},
+	{Pattern: "/user/<name>/", Handler: func(core *dmf.Core) *dmf.Response {
+		return core.String(core.Request.UrlParams["name"])
 	}},
 }
 

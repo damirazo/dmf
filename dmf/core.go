@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"regexp"
 )
 
 type Core struct {
@@ -20,23 +19,26 @@ func (core *Core) GetRoutes() []Route {
 func (core *Core) HandleRequest() {
 	var hasRoute = false
 	var handler func(core *Core) *Response
+	var urlParams map[string]string
 	method := core.Request.Method
-	path := core.Request.Path
+	path := CleanPath(core.Request.Path)
 
 	var log = &Log{Writer: os.Stdout}
 	log.Info(fmt.Sprintf("%s %s", method, path))
 
 	for _, route := range core.GetRoutes() {
-		if matched, _ := regexp.MatchString(route.Pattern, path); matched == true {
-			if route.HasMethod(method) {
-				handler = route.Handler
-				hasRoute = true
-			}
+		isMatched, ctx := route.Match(path, method)
+		if isMatched {
+			handler = route.Handler
+			hasRoute = true
+			urlParams = ctx
+			break
 		}
 	}
 
 	var response *Response
-	//defer handleError(response)
+	core.Request.UrlParams = urlParams
+	defer handleError(response)
 
 	if hasRoute && handler != nil {
 		response = handler(core)

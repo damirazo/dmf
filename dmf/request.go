@@ -3,9 +3,10 @@ package dmf
 import "net/http"
 
 type Request struct {
-	R      *http.Request
-	Method HttpMethodType
-	Path   string
+	R         *http.Request
+	Method    HttpMethodType
+	Path      string
+	UrlParams map[string]string
 }
 
 func NewRequest(r *http.Request) *Request {
