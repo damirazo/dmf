@@ -19,6 +19,18 @@ var routes = []dmf.Route{
 	{Pattern: "/user/<name>/", Handler: func(core *dmf.Core) *dmf.Response {
 		return core.String(core.Request.UrlParams["name"])
 	}},
+	{Pattern: "/template/", Handler: func(core *dmf.Core) *dmf.Response {
+		context := make(map[string]interface{})
+		context["var1"] = "foo"
+		context["var2"] = "bar"
+
+		result, err := core.Template("main.html", context)
+		if err != nil {
+			return core.String(fmt.Sprintf("error: %s", err))
+		}
+
+		return core.String(result)
+	}},
 }
 
 func main() {

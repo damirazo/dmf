@@ -1,9 +1,12 @@
 package dmf
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
 	"net/http"
 	"os"
+	"path/filepath"
 )
 
 type Core struct {
@@ -38,7 +41,7 @@ func (core *Core) HandleRequest() {
 
 	var response *Response
 	core.Request.UrlParams = urlParams
-	defer handleError(response)
+	//defer handleError(response)
 
 	if hasRoute && handler != nil {
 		response = handler(core)
@@ -60,6 +63,53 @@ func (core *Core) HandleRequest() {
 	}
 }
 
+func (core *Core) String(s string) *Response {
+	return &Response{
+		StatusCode: http.StatusOK,
+		Content:    s,
+	}
+}
+
+// ApplicationRoot Путь до директории приложения
+func (core *Core) ApplicationRoot() (string, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	return dir, nil
+}
+
+// Template рендеринг указанного шаблона
+func (core *Core) Template(templateName string, context map[string]interface{}) (string, error) {
+	var err error
+
+	t := template.New(templateName)
+
+	d, err := core.ApplicationRoot()
+	if err != nil {
+		return "", nil
+	}
+
+	path := filepath.Join(d, "templates", templateName)
+	t, err = t.ParseFiles(path)
+	if err != nil {
+		return "", err
+	}
+
+	var tpl bytes.Buffer
+	if err := t.Execute(&tpl, context); err != nil {
+		return "", err
+	}
+
+	query := tpl.String()
+
+	return query, nil
+
+}
+
+// Утилиты
+
 func handleError(response *Response) {
 	if response == nil {
 		panic("error")
@@ -68,12 +118,5 @@ func handleError(response *Response) {
 	if recoveryMessage := recover(); recoveryMessage != nil {
 		response.StatusCode = 500
 		response.Content = fmt.Sprintf("Unhandled error: %s", recoveryMessage)
-	}
-}
-
-func (core *Core) String(s string) *Response {
-	return &Response{
-		StatusCode: http.StatusOK,
-		Content:    s,
 	}
 }
